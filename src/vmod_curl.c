@@ -419,10 +419,11 @@ vmod_headers(struct sess *sp, const char *header)
 	struct vsb *output;
 	unsigned v, u;
 	char *p;
+	int err = 0;
 
 	u = WS_Reserve(sp->ws, 0);
 	p = sp->ws->f;
-	output = VSB_new_auto();
+	output = VSB_new(NULL, p, u, VSB_FIXEDLEN);
 	AN(output);
 
 	VTAILQ_FOREACH(h, &c->headers, list) {
@@ -434,11 +435,11 @@ vmod_headers(struct sess *sp, const char *header)
 
 	VSB_finish(output);
 	v = VSB_len(output);
-	strcpy(p, VSB_data(output));
+	err = VSB_error(output);
 	VSB_delete(output);
 
 	v++;
-	if (v > u) {
+	if ((v > u) || (err != 0)) {
 		WS_Release(sp->ws, 0);
 		VSL(SLT_Debug, 0, "libvmod-curl: workspace overflowed, aborting");
 		return (NULL);
