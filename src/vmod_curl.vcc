@@ -17,6 +17,10 @@ Function VOID post(STRING, STRING)
 # Return the header named in the first argument
 Function STRING header(STRING)
 
+# Return the values of all headers with the given name, each
+# terminated by "\n" (e.g., multiple Set-Cookie headers)
+Function STRING headers(STRING)
+
 # Free the memory used by headers. Not needed, will be handled
 # automatically if it's not called.
 Function VOID free()

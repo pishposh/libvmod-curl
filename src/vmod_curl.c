@@ -410,6 +410,45 @@ vmod_header(struct sess *sp, const char *header)
 }
 
 const char *
+vmod_headers(struct sess *sp, const char *header)
+{
+	struct hdr *h;
+	struct vmod_curl *c;
+	c = cm_get(sp);
+
+	struct vsb *output;
+	unsigned v, u;
+	char *p;
+
+	u = WS_Reserve(sp->ws, 0);
+	p = sp->ws->f;
+	output = VSB_new_auto();
+	AN(output);
+
+	VTAILQ_FOREACH(h, &c->headers, list) {
+		if (strcasecmp(h->key, header) == 0) {
+			VSB_cat(output, h->value);
+			VSB_putc(output, '\n');
+		}
+	}
+
+	VSB_finish(output);
+	v = VSB_len(output);
+	strcpy(p, VSB_data(output));
+	VSB_delete(output);
+
+	v++;
+	if (v > u) {
+		WS_Release(sp->ws, 0);
+		VSL(SLT_Debug, 0, "libvmod-curl: workspace overflowed, aborting");
+		return (NULL);
+	}
+	WS_Release(sp->ws, v);
+
+	return (p);
+}
+
+const char *
 vmod_body(struct sess *sp)
 {
 	return (VSB_data(cm_get(sp)->body));
